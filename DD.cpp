@@ -10,7 +10,7 @@ dd dd::operator+(const dd& other) const
     s2 += t1;
     s1 = math::quick_two_sum(s1, s2, s2);
 
-    s2 += t1;
+    s2 += t2;
     s1 = math::quick_two_sum(s1, s2, s2);
 
     return dd(s1, s2);
