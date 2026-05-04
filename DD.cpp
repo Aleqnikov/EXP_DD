@@ -1,6 +1,6 @@
 #include "DD.h"
 
-dd_ dd_::operator+(const dd_& other) const
+dd dd::operator+(const dd& other) const
 {
     double s1, s2, t1, t2;
 
@@ -13,10 +13,10 @@ dd_ dd_::operator+(const dd_& other) const
     s2 += t1;
     s1 = math::quick_two_sum(s1, s2, s2);
 
-    return dd_(s1, s2);
+    return dd(s1, s2);
 }
 
-dd_ dd_::operator-(const dd_ &other) const
+dd dd::operator-(const dd &other) const
 {
     double s1, s2, t1, t2;
 
@@ -30,11 +30,11 @@ dd_ dd_::operator-(const dd_ &other) const
 
     s1 = math::quick_two_sum(s1, s2, s2);
 
-    return dd_(s1, s2);
+    return dd(s1, s2);
 }
 
 
-dd_ dd_::operator+=(double a)
+dd dd::operator+=(double a)
 {
     double s1, s2;
 
@@ -44,33 +44,33 @@ dd_ dd_::operator+=(double a)
     return *this;
 }
 
-dd_ dd_::operator*(const dd_& other) const
+dd dd::operator*(const dd& other) const
 {
     double p1, p2;
 
     p1 = math::two_prod(this->hi, other.hi, p2);
     p2 += (this->hi * other.lo + this->lo * other.hi);
     p1 = math::quick_two_sum(p1, p2, p2);
-    return dd_(p1, p2);
+    return dd(p1, p2);
 }
 
-dd_ dd_::operator*(const double b) const
+dd dd::operator*(const double b) const
 {
     double p1, p2;
 
     p1 = math::two_prod(this->hi, b, p2);
     p2 += (this->lo * b);
     p1 = math::quick_two_sum(p1, p2, p2);
-    return dd_(p1, p2);
+    return dd(p1, p2);
 }
 
 
-dd_ mul_pwr2(dd_ a, double b)
+dd mul(dd a, double b)
 {
-    return dd_(a.hi * b, a.lo * b);
+    return dd(a.hi * b, a.lo * b);
 }
 
-dd_ squre_two( dd_ a)
+dd square( dd a)
 {
     double p1, p2;
     double s1, s2;
@@ -81,10 +81,10 @@ dd_ squre_two( dd_ a)
 
     s1 = math::quick_two_sum(p1, p2, s2);
 
-    return dd_(s1, s2);
+    return dd(s1, s2);
 }
 
-dd_ ldexp(const dd_ &a, int exp)
+dd ldexp(const dd &a, int exp)
 {
-    return dd_(std::ldexp(a.hi, exp), std::ldexp(a.lo, exp));
+    return dd(std::ldexp(a.hi, exp), std::ldexp(a.lo, exp));
 }

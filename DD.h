@@ -1,38 +1,34 @@
-#ifndef LB2_DD_H
-#define LB2_DD_H
-
+#ifndef DD_H
+#define DD_H
 
 #include <cmath>
-/**
- * Содержится структура, описывающяя тип double-double.
- * а также необходимые функции, для работы.
- */
-
 #include "low_level_math.h"
 
-struct dd_
+/**
+ * Содержится структура, описывающяя тип double-double.
+ * а также необходимые  для работы функции.
+ */
+
+struct dd
 {
     double hi;
     double lo;
 
-    dd_() : hi(0.0), lo(0.0) {}
-    dd_ (double hi, double lo) : hi(hi), lo(lo) {};
-    dd_ (double h) { hi = h; lo = 0.0; }
+    dd() : hi(0.0), lo(0.0) {}
+    dd (double hi, double lo) : hi(hi), lo(lo) {};
+    dd (double h) { hi = h; lo = 0.0; }
 
-    dd_ operator+(const dd_& other) const;
-    dd_ operator-(const dd_ &other) const;
-    dd_ operator+=(double a);
-    dd_ operator*(const dd_& other) const;
-    dd_ operator*(const double b) const;
-
+    dd operator+(const dd& other) const;
+    dd operator-(const dd &other) const;
+    dd operator+=(double a);
+    dd operator*(const dd& other) const;
+    dd operator*(const double b) const;
 };
 
-dd_ mul_pwr2(dd_ a, double b);
+dd mul(dd a, double b);
 
-dd_ squre_two( dd_ a);
+dd square( dd a);
 
-dd_ ldexp(const dd_ &a, int exp);
+dd ldexp(const dd &a, int exp);
 
-
-
-#endif //LB2_DD_H
+#endif //DD_H
