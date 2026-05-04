@@ -75,3 +75,4 @@ cmake -B build && cmake --build build
 2. J. R. Shewchuk. *Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates* // Discrete & Computational Geometry. — 1997. — Vol. 18, No. 3. — P. 305–363.
 
 3. Y. Hida, X. S. Li, D. H. Bailey. *Algorithms for Quad-Double Precision Floating Point Arithmetic* // Proceedings of the 15th IEEE Symposium on Computer Arithmetic (ARITH-15). — 2001. — URL: https://portal.nersc.gov/project/sparse/xiaoye-web/arith15.pdf
+4. J.-M. Muller, N. Brisebarre, F. de Dinechin et al. *Handbook of Floating-Point Arithmetic*. — Birkhäuser, 2010. — 572 p. — (гл. 4, 14)
