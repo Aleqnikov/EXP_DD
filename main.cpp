@@ -1,9 +1,9 @@
 #include <iostream>
 #include <limits>
 #include <cmath>
-#include <chrono>
-
-#include "CLI11.hpp"
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 #include "DD.h"
 
@@ -34,7 +34,6 @@ namespace Consts
         dd { 4.77947733238738525e-14,  4.39920548583408126e-31},
         dd { 2.81145725434552060e-15,  1.65088427308614326e-31}
     };
-
 }
 
 /**
@@ -52,7 +51,6 @@ dd fast_taylor_pow(dd s, int power)
     return s;
 }
 
-
 /**
  * Вычисление exp(a) в формате double-double.
  *
@@ -62,25 +60,22 @@ dd fast_taylor_pow(dd s, int power)
  *   2. exp(r) - 1 вычисляется рядом Тейлора, важно, что быстро сходится при малом r.
  *   3. Результат восстанавливается: exp(a) = 2^m * exp(r)^k.
  */
-dd exp( const dd &a)
+dd exp_dd(const dd& a)
 {
+    const int k = 512;                  // Обязательно k = 2^p
 
-    const int k = 512;        			// Обязательно k = 2^p
-
-	/**
+    /**
      * Граница аргумента: максимальное значение double равно ~2^1024,
      * а его натуральный логарифм примерно равен 709.
      * При |a| > 709 результат уходит в переполнение - inf или в ноль.
      */
     const double limit_exp_arg = 709.0;
 
-
-	if (a.hi <= -limit_exp_arg) return 0.0;
-    if (a.hi >= limit_exp_arg) return Consts::INF;
+    if (a.hi <= -limit_exp_arg) return 0.0;
+    if (a.hi >= limit_exp_arg)  return Consts::INF;
 
     if (a.hi == 0) return 1.0;
     if (a.hi == 1.0 && a.lo == 0.0) return Consts::EXP;
-
 
     /**
      * Выбор k = 512 = 2^9 - это некая константа, что сохраняет точность, и скорость быстродействия алгоритма:
@@ -88,7 +83,7 @@ dd exp( const dd &a)
      *     Деление на k = 512 даёт столь малое r, что ряд Тейлора сходится
      *     до нужной точности примерно за 15 итераций.
      *     Степень двойки позволяет вычислить exp(r)^512 последовательными
-     *     возведениями в квадрат за  9 шагов.
+     *     возведениями в квадрат за 9 шагов.
      *     k = 256: ряд сходился бы медленнее; k = 1024: ошибка накапливалась
      *     бы сильнее из-за слишком малого r.
      */
@@ -100,9 +95,9 @@ dd exp( const dd &a)
      */
 
     double m = std::floor(a.hi / Consts::LN2.hi + 0.5);    // + 0.5 необходим для правильного округления.
-    dd r = mul(a -  Consts::LN2 * m , k_inv);
+    dd r = mul(a - Consts::LN2 * m, k_inv);
 
-	// Ряд Тейлора для exp(r) - 1, начиная со слагаемого r^2/2!:
+    // Ряд Тейлора для exp(r) - 1, начиная со слагаемого r^2/2!:
     //   s = r + r^2/2! + r^3/3! + ...
     dd s, t, p;
 
@@ -141,63 +136,65 @@ dd exp( const dd &a)
 }
 
 
-int main(int argc, char *argv[])
+void print_dd(const dd& x)
 {
-    CLI::App app{"Вычисление функции exp(x) в формате double-double."};
-
-    double x_val = 1.0;
-    bool compare = false;
-    bool benchmark = false;
-    int bench_iters = 1000000;
-
-    app.add_option("-x,--value", x_val, "Аргумент функции exp(x)")->required();
-    app.add_flag("-c,--compare", compare, "Сравнить результат со стандартным std::exp(x)");
-    app.add_flag("-b,--benchmark", benchmark, "Замерить скорость вычисления");
-    app.add_option("-n,--iterations", bench_iters, "Количество итераций для замера (по умолчанию 1 000 000)");
-
-    CLI11_PARSE(app, argc, argv);
-
-    dd x(x_val, 0.0);
-    dd res = exp(x);
-
-    std::cout.precision(17);
-    std::cout << "exp(" << x_val << "):" << std::endl;
-    std::cout << "  hi = " << res.hi <<  std::endl;
-    std::cout << "  lo = " << res.lo <<  std::endl;
-
-    if (compare) {
-        double std_val = std::exp(x_val);
-        double rel_err = std::abs((res.hi - std_val) / std_val);
-
-        std::cout << std::endl;
-        std::cout << "std::exp(" << x_val << ") = " << std_val << std::endl;
-        std::cout << "Относительная погрешность hi = " << rel_err
-                  << "  " << std::endl;
+    if (std::isinf(x.hi) || std::isnan(x.hi)) {
+        std::cout << x.hi << std::endl;
+        return;
     }
 
-    if (benchmark) {
-        auto t0 = std::chrono::high_resolution_clock::now();
-        for (int i = 0; i < bench_iters; i++)
-            volatile auto _ = exp(dd(x_val, 0.0));
-        auto t1 = std::chrono::high_resolution_clock::now();
+    const int precision = 32;
 
-        double total_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-        double per_call_ns = total_ms * 1e6 / bench_iters;
-
-        auto s0 = std::chrono::high_resolution_clock::now();
-        for (int i = 0; i < bench_iters; i++)
-            volatile auto _ = std::exp(x_val);
-        auto s1 = std::chrono::high_resolution_clock::now();
-
-        double std_total_ms = std::chrono::duration<double, std::milli>(s1 - s0).count();
-        double std_per_call_ns = std_total_ms * 1e6 / bench_iters;
-
-        std::cout << std::endl;
-        std::cout << "Замер скорости (" << bench_iters << " итераций):" << std::endl;
-        std::cout << "  dd::exp    : " << per_call_ns     << " нс/вызов" << std::endl;
-        std::cout << "  std::exp   : " << std_per_call_ns << " нс/вызов" << std::endl;
-        std::cout << "  Замедление : " << per_call_ns / std_per_call_ns << "x" << std::endl;
+    int exp_hi = 0;
+    if (x.hi != 0.0) {
+        exp_hi = static_cast<int>(std::floor(std::log10(std::abs(x.hi))));
     }
+
+
+    double lo_scaled = x.lo * std::pow(10.0, -exp_hi);
+
+    std::ios_base::fmtflags fl = std::cout.flags();
+
+    std::cout << std::scientific << std::setprecision(precision);
+    std::cout << x.hi  << std::endl;
+
+
+    std::cout << std::fixed << std::setprecision(precision);
+    std::cout << lo_scaled << "e" << (exp_hi >= 0 ? "+" : "") << exp_hi  << std::endl;
+
+    std::cout.flags(fl);
+}
+
+int main(int argc, char* argv[])
+{
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " -x <hi_value> [-l <lo_value>]" << std::endl;
+        return 1;
+    }
+
+    double x_hi = 0.0;
+    double x_lo = 0.0;
+    bool hi_provided = false;
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if ((arg == "-x" || arg == "--xi") && i + 1 < argc) {
+            x_hi = std::stod(argv[++i]);
+            hi_provided = true;
+        } else if ((arg == "-l" || arg == "--lo") && i + 1 < argc) {
+            x_lo = std::stod(argv[++i]);
+        }
+    }
+
+    if (!hi_provided) {
+        std::cerr << "Error: Argument -x is required." << std::endl;
+        return 1;
+    }
+
+    dd x(x_hi, x_lo);
+    dd res = exp_dd(x);
+
+    print_dd(res);
 
     return 0;
 }

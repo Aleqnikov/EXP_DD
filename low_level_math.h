@@ -1,28 +1,48 @@
 #ifndef LOW_LEVEL_MATH_H
 #define LOW_LEVEL_MATH_H
 
+#include <cmath>
+
 namespace math
 {
-    // Важно отметить, верно тогда и только тогда когда |a| > |b|
-    double quick_two_sum(double a, double b, double& err);
+    // Верно тогда и только тогда, когда |a| >= |b|
+    inline double quick_two_sum(double a, double b, double& err)
+    {
+        double s = a + b;
+        err = b - (s - a);
+        return s;
+    }
 
-    double two_sum (double a, double b, double& err);
+    inline double two_sum(double a, double b, double& err)
+    {
+        double s = a + b;
+        double v = s - a;
+        err = (a - (s - v)) + (b - v);
+        return s;
+    }
 
-    double two_diff(double a, double b, double &err);
+    inline double two_diff(double a, double b, double& err)
+    {
+        double s = a - b;
+        double t = s - a;
+        err = (a - (s - t)) - (b + t);
+        return s;
+    }
 
-    // Для функции split.
-    const double thresh = 6.69692879491417e+299;    // = 2^99.
-                                                    // как бы верхний возможный лимит,
-                                                    // после которого будет переполнение.
-    const double split_x =  134217729.0;            // = 2^27 + 1,
-                                                    // Как бы число которое разделяет
-                                                    // число на основную часть и на его ошибку
 
-    void split(double a, double &hi, double &lo);
+    inline double two_prod(double a, double b, double& err)
+    {
+        double p = a * b;
+        err = std::fma(a, b, -p);
+        return p;
+    }
 
-    double square(double a, double& err);
-
-    double two_prod (double a, double b, double &err);
+    inline double square(double a, double& err)
+    {
+        double q = a * a;
+        err = std::fma(a, a, -q);
+        return q;
+    }
 }
 
 #endif //LOW_LEVEL_MATH_H
